@@ -5,6 +5,7 @@
 import argparse
 import logging
 import ssl
+import requests
 from os import environ, sys
 
 from pynetbox import api
@@ -63,16 +64,18 @@ def main(arguments):
     netbox_token = environ.get("NETBOX_TOKEN")
     # Set NetBox API
     netbox = api(netbox_host, token=netbox_token, threading=True)
+    netbox.http_session.verify = False
     # Create API call to get all custom fields which are on the device objects
     try:
         # Get NetBox version
         nb_version = netbox.version
         logger.debug(f"NetBox version is {nb_version}.")
-    except RequestsConnectionError:
+    except RequestsConnectionError as e:
         logger.error(
             f"Unable to connect to NetBox with URL {netbox_host}."
             " Please check the URL and status of NetBox."
         )
+        print(e)
         sys.exit(1)
     except NBRequestError as e:
         logger.error(f"NetBox error: {e}")
@@ -122,6 +125,7 @@ def main(arguments):
         netbox_vms = list(
             netbox.virtualization.virtual_machines.filter(**config["nb_vm_filter"]))
     netbox_site_groups = convert_recordset((netbox.dcim.site_groups.all()))
+    #netbox_site_groups = convert_recordset((netbox.extras.tags.all()))
     netbox_regions = convert_recordset(netbox.dcim.regions.all())
     netbox_journals = netbox.extras.journal_entries
     zabbix_groups = zabbix.hostgroup.get(output=["groupid", "name"])
@@ -208,14 +212,24 @@ def main(arguments):
             # Check if a valid template has been found for this VM.
             if not device.zbx_template_names:
                 continue
-            device.set_hostgroup(
-                config["hostgroup_format"], netbox_site_groups, netbox_regions)
+            #device.set_hostgroup(
+            #    config["hostgroup_format"], netbox_site_groups, netbox_regions)
+            device.set_tags()
+            print("                      TAGS                          ")
+            print(device.tags)
+            tag_values = list(set(tag['value'] for tag in device.tags if tag.get('value'))) 
+            print(tag_values)
+            device.hostgroups = tag_values
+            #device.set_hostgroup(
+            #    config["hostgroup_format"], tag_values, netbox_regions)
+            #device.set_hostgroup(
+            #    config["hostgroup_format"], netbox_site_groups, netbox_regions)
             # Check if a valid hostgroup has been found for this VM.
             if not device.hostgroups:
                 continue
             device.set_inventory(nb_device)
             device.set_usermacros()
-            device.set_tags()
+            #device.set_tags()
             # Checks if device is part of cluster.
             # Requires clustering variable
             if device.isCluster() and config["clustering"]:
