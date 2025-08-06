@@ -64,7 +64,7 @@ def main(arguments):
     netbox_token = environ.get("NETBOX_TOKEN")
     # Set NetBox API
     netbox = api(netbox_host, token=netbox_token, threading=True)
-    
+    netbox.http_session.verify = False
     # Create API call to get all custom fields which are on the device objects
     try:
         # Get NetBox version
@@ -308,4 +308,5 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--quiet", help="Turn off warnings.", action="store_true")
     args = parser.parse_args()
     main(args)
+
 
