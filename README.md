@@ -10,6 +10,16 @@
 4. run 'source vars.sh'
 5. Run script.
 
+6. # Prerequisites (to add VM to Zabbix):
+1. Create custom field in NetBox 'Zabbix hostid' (+ 'Zabbix template')
+2. Create a host with:\
+   Site\
+   Cluster\
+   Platform\
+   Primary IP (probably an Inteface will be needed)\
+   Tags (optional, for my case)\
+   Config context (if it is set to true in config.py).
+
 # NetBox to Zabbix synchronization
 
 A script to create, update and delete Zabbix hosts using NetBox device objects. Tested and compatible with all [currently supported Zabbix releases](https://www.zabbix.com/life_cycle_and_release_policy).
@@ -736,6 +746,7 @@ since the data in NetBox is plain-text.
 > **_NOTE:_** Not all SNMP data is required for a working configuration.
 > [The following parameters are allowed](https://www.zabbix.com/documentation/current/manual/api/reference/hostinterface/object#details_tag "The following parameters are allowed") but
 > are not all required, depending on your environment.
+
 
 
 
